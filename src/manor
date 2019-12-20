@@ -63,6 +63,15 @@ function download_module() {
     fi
 }
 
+function print_module_info() {
+    name=$1
+    cd $(name_to_dir $name)
+    echo "_____ $name _____"
+    $MANOR_INSTALL_LOCATION/pkg.sh info
+    $MANOR_INSTALL_LOCATION/pkg.sh show-links
+    cd ..
+}
+
 function install_module() {
     name=$1
     cd $(name_to_dir $name)
@@ -179,14 +188,15 @@ function show_modules_info() {
         echo "No modules present"
         exit 1
     fi
+    if [[ $# -eq 0 ]]; then
+        module_names=$(read_modules_list)
+    else
+        module_names=$@
+    fi
     cd $MODULES_DIR
     echo "Currently installed modules:"
-    for module in `ls`; do
-        cd $module
-        echo "_____ $module _____"
-        $MANOR_INSTALL_LOCATION/pkg.sh info
-        $MANOR_INSTALL_LOCATION/pkg.sh show-links
-        cd ..
+    for module in $module_names; do
+        print_module_info $module
     done
     cd ..
 }

@@ -1,0 +1,225 @@
+#!/bin/bash
+
+########### Constants ###########
+if [[ -z $MANOR_INSTALL_LOCATION ]]; then
+    MANOR_INSTALL_LOCATION=$(dirname $(readlink -f $0))
+fi
+if [[ -z $MODULES_LIST ]]; then
+    MODULES_LIST='enabled_modules'
+fi
+if [[ -z $MODULES_DIR ]]; then
+    # MODULES_DIR='modules'
+    MODULES_DIR="$XDG_DATA_HOME/manor"
+fi
+
+########## Utility functions #############
+function ensure_modules_dir_exists() {
+    if [[ ! -d $MODULES_DIR ]]; then
+        mkdir $MODULES_DIR
+    fi
+}
+
+function url_to_name() {
+    url=$1
+    if echo $url | grep -q 'git@.*\.git' - ; then
+        name=`echo $url | cut -d '/' -f 2 | sed 's/.git//'`
+        echo $name
+    else
+        echo $url
+    fi
+}
+
+function name_to_git_url() {
+    name=$1
+    printf "git@github.com:%s.git" $name
+}
+
+function name_to_dir() {
+    name=$1
+    echo $name | sed -r 's/.*\///'
+}
+
+function read_modules_list() {
+    if [[ -f $MODULES_LIST ]]; then
+        echo $(grep -v "^#.*" $MODULES_LIST) | sed 's/"//g'
+    else
+        echo "MODULES_LIST: $MODULES_LIST does not exist!"
+        exit 1
+    fi
+}
+
+
+############ Single module operations ##########
+
+function download_module() {
+    name=$1
+    if [[ ! -d $(name_to_dir $name) ]]; then
+        url=$(name_to_git_url $name)
+        echo "_____ $name _____"
+        git clone --recursive $url
+    fi
+}
+
+function install_module() {
+    name=$1
+    cd $(name_to_dir $name)
+    echo "_____ $name _____"
+    $MANOR_INSTALL_LOCATION/pkg.sh install
+    cd ..
+}
+
+function uninstall_module() {
+    name=$1
+    cd $(name_to_dir $name)
+    echo "_____ $name _____"
+    $MANOR_INSTALL_LOCATION/pkg.sh uninstall
+    cd ..
+}
+
+function update_module() {
+    name=$1
+    cd $(name_to_dir $name)
+    echo "_____ $name _____"
+    $MANOR_INSTALL_LOCATION/pkg.sh update
+    cd ..
+}
+
+function run_git_cmd() {
+    name=$1
+    args=$@
+    git_args=("${args[@]:1}")
+    cd $(name_to_dir $name)
+    echo "_____ $name _____"
+    git $git_args
+    cd ..
+}
+
+############ Multi module operations ##########
+
+function install_modules() {
+    if [[ $# -eq 0 ]]; then
+        module_names=$(read_modules_list)
+    else
+        module_names=$@
+    fi
+    ensure_modules_dir_exists
+    cd $MODULES_DIR
+    for name in $module_names; do
+        download_module $name
+        install_module $name
+    done
+    cd ..
+}
+
+
+function update_modules() {
+    ensure_modules_dir_exists
+    module_names=$(read_modules_list)
+    cd $MODULES_DIR
+    for name in $module_names; do
+        update_module $name
+    done
+    cd ..
+}
+
+function uninstall_modules() {
+    if [[ ! -d $MODULES_DIR ]]; then
+        echo "No modules present"
+        exit 1
+    fi
+    if [[ $# -eq 0 ]]; then
+        module_names=$(read_modules_list)
+    else
+        module_names=$@
+    fi
+    echo $MODULES_DIR
+    cd $MODULES_DIR
+    for name in $module_names; do
+        uninstall_module $name
+    done
+    cd ..
+
+}
+
+function recursive_git() {
+    if [[ ! -d $MODULES_DIR ]]; then
+        echo "No modules present"
+        exit 1
+    fi
+    module_names=$(read_modules_list)
+    cd $MODULES_DIR
+    for name in $module_names; do
+        run_git_cmd $name $@
+    done
+    cd ..
+
+}
+
+function list_modules() {
+    if [[ ! -d $MODULES_DIR ]]; then
+        echo "No modules present"
+        exit 1
+    fi
+    if [[ `ls $MODULES_DIR | wc -l` -eq 0 ]]; then
+        echo "No $MODULES_DIR present"
+    else
+        ls -1 $MODULES_DIR
+    fi
+}
+
+function show_modules_info() {
+    if [[ ! -d $MODULES_DIR ]]; then
+        echo "No modules present"
+        exit 1
+    fi
+    cd $MODULES_DIR
+    echo "Currently installed modules:"
+    for module in `ls`; do
+        cd $module
+        echo "_____ $module _____"
+        $MANOR_INSTALL_LOCATION/pkg.sh info
+        $MANOR_INSTALL_LOCATION/pkg.sh show-links
+        cd ..
+    done
+    cd ..
+}
+
+
+############ Main entry ############
+
+args=("$@")
+cmd_args=("${args[@]:1}")
+
+__usage="Usage: manor <subcommand>
+where <subcommand> is one of:
+    info
+    isntall
+    uninstall
+    update
+    list
+    git "
+
+if [[ $# -eq 0 ]]; then
+    echo "$__usage"
+    exit 1
+else
+    subcommand=$1
+fi
+
+case $subcommand in
+    'info')
+        show_modules_info ;;
+    'install')
+        install_modules $cmd_args;;
+    'update')
+        update_modules ;;
+    'uninstall')
+        uninstall_modules $cmd_args ;;
+    'git')
+        recursive_git $cmd_args ;;
+    'list')
+        list_modules ;;
+    *)
+        echo "Invalid command" ;;
+esac
+

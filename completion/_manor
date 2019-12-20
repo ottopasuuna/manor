@@ -1,0 +1,33 @@
+#compdef _manor manor
+
+typeset -A opt_args
+
+_arguments \
+    '1: :->subcommand'\
+    '*: :->args'
+
+case $state in
+(subcommand)
+    local -a subcommands; subcommands=(
+        'list:List available modules'
+        'info:Display information on installed modules'
+        'install:Install modules'
+        'uninstall:Uninstall modules'
+        'update:Pull updates for modules'
+        'git:Run a git command on all modules'
+    )
+    _describe 'subcommand' subcommands
+;;
+*)
+    case $words[2] in
+    install)
+        compadd "$@" $(manor list)
+    ;;
+    uninstall)
+        compadd "$@" $(manor list)
+    ;;
+    update)
+        compadd "$@" $(manor list)
+    ;;
+    esac
+esac

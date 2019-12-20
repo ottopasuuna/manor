@@ -4,8 +4,9 @@
 if [[ -z $MANOR_INSTALL_LOCATION ]]; then
     MANOR_INSTALL_LOCATION=$(dirname $(readlink -f $0))
 fi
+MANOR_DEFAULT_MODULE_LIST="enabled_modules"
 if [[ -z $MODULES_LIST ]]; then
-    MODULES_LIST='enabled_modules'
+    MODULES_LIST="$XDG_DATA_HOME/manor/$MANOR_DEFAULT_MODULE_LIST"
 fi
 if [[ -z $MODULES_DIR ]]; then
     # MODULES_DIR='modules'
@@ -42,6 +43,8 @@ function name_to_dir() {
 function read_modules_list() {
     if [[ -f $MODULES_LIST ]]; then
         echo $(grep -v "^#.*" $MODULES_LIST) | sed 's/"//g'
+    elif [[ "$(declare -p MODULES_LIST)" =~ "declare -a" ]]; then
+        echo ${MODULES_LIST[@]} | sed 's/"//g"'
     else
         echo "MODULES_LIST: $MODULES_LIST does not exist!"
         exit 1
@@ -114,7 +117,11 @@ function install_modules() {
 
 function update_modules() {
     ensure_modules_dir_exists
-    module_names=$(read_modules_list)
+    if [[ $# -eq 0 ]]; then
+        module_names=$(read_modules_list)
+    else
+        module_names=$@
+    fi
     cd $MODULES_DIR
     for name in $module_names; do
         update_module $name
@@ -163,7 +170,7 @@ function list_modules() {
     if [[ `ls $MODULES_DIR | wc -l` -eq 0 ]]; then
         echo "No $MODULES_DIR present"
     else
-        ls -1 $MODULES_DIR
+        printf "%s\n" $(read_modules_list)
     fi
 }
 
@@ -212,7 +219,7 @@ case $subcommand in
     'install')
         install_modules $cmd_args;;
     'update')
-        update_modules ;;
+        update_modules $cmd_args;;
     'uninstall')
         uninstall_modules $cmd_args ;;
     'git')

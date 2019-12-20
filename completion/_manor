@@ -15,6 +15,7 @@ case $state in
         'uninstall:Uninstall modules'
         'update:Pull updates for modules'
         'git:Run a git command on all modules'
+        'goto:cd into a module directory'
     )
     _describe 'subcommand' subcommands
 ;;
@@ -27,6 +28,9 @@ case $state in
         compadd "$@" $(manor list)
     ;;
     update)
+        compadd "$@" $(manor list)
+    ;;
+    goto)
         compadd "$@" $(manor list)
     ;;
     esac

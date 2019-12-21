@@ -54,7 +54,7 @@ function update_module() {
 function run_git_cmd() {
     name=$1
     args=$@
-    git_args=("${args[@]:1}")
+    git_args="${args[@]:1}"
     cd $(name_to_dir $name)
     echo "_____ $name _____"
     git $git_args
@@ -120,7 +120,7 @@ function recursive_git() {
     module_names=$(read_modules_list)
     cd $MODULES_DIR
     for name in $module_names; do
-        run_git_cmd $name $@
+        run_git_cmd $name "$@"
     done
     cd ..
 

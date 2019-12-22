@@ -16,6 +16,7 @@ case $state in
         'update:Pull updates for modules'
         'git:Run a git command on all modules'
         'goto:cd into a module directory'
+        'add:Add a file to a module'
     )
     _describe 'subcommand' subcommands
 ;;
@@ -29,6 +30,13 @@ case $state in
     ;;
     update)
         compadd "$@" $(manor list)
+    ;;
+    add)
+        if [[ ${#words[@]} -eq 3 ]]; then
+            compadd "$@" $(manor list)
+        else
+            _files
+        fi
     ;;
     goto)
         compadd "$@" $(manor list)

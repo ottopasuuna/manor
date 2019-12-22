@@ -61,6 +61,19 @@ function run_git_cmd() {
     cd ..
 }
 
+function add_file_to_module() {
+    name=$1
+    file=$2
+    real_path=$(realpath $file)
+    dest_name=$(echo $(basename $file) | sed -r 's/^\.//g')
+    cd $MODULES_DIR/$(name_to_dir $name)
+    mv $real_path $dest_name
+    link_src=$(realpath $dest_name)
+    link_dest=$(echo $real_path | sed 's@'"$HOME"'@\$HOME@')
+    echo "Add this to your config.sh for $name and run \"manor install\":"
+    echo "[$dest_name]=$link_dest"
+}
+
 ############ Multi module operations ##########
 
 function install_modules() {
@@ -160,7 +173,7 @@ function show_modules_info() {
 ############ Main entry ############
 
 args=("$@")
-cmd_args=("${args[@]:1}")
+cmd_args="${args[@]:1}"
 
 __usage="Usage: manor <subcommand>
 where <subcommand> is one of:
@@ -191,6 +204,8 @@ case $subcommand in
         recursive_git $cmd_args ;;
     'list')
         list_modules ;;
+    'add')
+        add_file_to_module $cmd_args ;;
     *)
         echo "Invalid command" ;;
 esac

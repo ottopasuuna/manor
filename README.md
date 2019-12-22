@@ -37,7 +37,7 @@ __install__() {
 }
 ```
 
-Create a file called `enabled_modules` in $XDG_DATA_HOME/manor that contains github entries like so:
+Create a file called `enabled_modules` in `$XDG_DATA_HOME/manor` that contains github entries like so:
 ```
 "ottopasuuna/dot-vim"
 "ottopasuuna/dot-zsh"
@@ -50,9 +50,9 @@ and run `manor install`. This will clone all the repos and set up symlinks as
 defined in the `config.sh` files in each module.
 
 There are a few configuration varaibles available:
-`$MANOR_INSTALL_LOCATION`: Where the manor executable is located
-`$MODULES_DIR`: Where to store modules. Defaults to `$XDG_DATA_HOME/manor`
-`$MODULES_LIST`: Path to the file listing the modules to install. Defaults to `$MODULES_DIR/enabled_modules`
+- `$MANOR_INSTALL_LOCATION`: Where the manor executable is located
+- `$MODULES_DIR`: Where to store modules. Defaults to `$XDG_DATA_HOME/manor`
+- `$MODULES_LIST`: Path to the file listing the modules to install. Defaults to `$MODULES_DIR/enabled_modules`
 
 ## Future work
 - Support using specific git branches

@@ -2,6 +2,9 @@
 
 ########### Constants ###########
 if [[ -z $MODULES_DIR ]]; then
+    if [[ -z $XDG_DATA_HOME ]]; then
+	    XDG_DATA_HOME="$HOME/.local/share"
+    fi
     MODULES_DIR="$XDG_DATA_HOME/manor"
 fi
 MANOR_DEFAULT_MODULE_LIST="enabled_modules"

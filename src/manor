@@ -18,6 +18,15 @@ function download_module() {
     fi
 }
 
+function ensure_correct_branch() {
+    name=$1
+    branch=$(get_branch_from_name $name)
+    if [[ -z $branch ]]; then
+        branch="master"
+    fi
+    git checkout $branch
+}
+
 function print_module_info() {
     name=$1
     cd $(name_to_dir $name)
@@ -31,6 +40,7 @@ function install_module() {
     name=$1
     cd $(name_to_dir $name)
     echo "_____ $name _____"
+    ensure_correct_branch $name
     $MANOR_INSTALL_LOCATION/pkg.sh install
     cd ..
 }

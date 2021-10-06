@@ -3,7 +3,7 @@
 ########### Constants ###########
 if [[ -z $MODULES_DIR ]]; then
     if [[ -z $XDG_DATA_HOME ]]; then
-	    XDG_DATA_HOME="$HOME/.local/share"
+        XDG_DATA_HOME="$HOME/.local/share"
     fi
     MODULES_DIR="$XDG_DATA_HOME/manor"
 fi
@@ -29,13 +29,21 @@ function url_to_name() {
     fi
 }
 
+function remove_branch_from_name() {
+    echo $1 | cut -d ':' -f 1
+}
+
+function get_branch_from_name() {
+    echo $1 | cut -d ':' -f 2 -s
+}
+
 function name_to_git_url() {
-    name=$1
+    name=$(remove_branch_from_name $1)
     printf "git@github.com:%s.git" $name
 }
 
 function name_to_dir() {
-    name=$1
+    name=$(remove_branch_from_name $1)
     echo $name | sed -r 's/.*\///'
 }
 
